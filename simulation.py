@@ -29,9 +29,9 @@ def simular_crescimento(dados, N, tempo_de_simulacao = 30, temperatura = 0, linh
 
     for t in range(tempo_de_simulacao):        
 
-        # Escolhendo uma nova temperatura e calculando o novo valor de r #
-        # o r será considerado como linear entre os valores de temperatura, logo, o valor de r será calculado por interpolação linear.
-        # A temperatura será truncada para os valores de temperatura fornecidos nos dados.
+        # escolhendo uma nova temperatura e calculando o novo valor de r
+        # o r será considerado como linear entre os valores de temperatura, logo, o valor de r será calculado por interpolação linear
+        # a temperatura será truncada para os valores de temperatura fornecidos nos dados
 
         new_temp = temperatura + random.uniform(-1,1) # gerar um novo valor de temperatura
         if new_temp > temps[-1]: # se a temperatura for maior que a máxima
@@ -65,8 +65,14 @@ def simular_crescimento(dados, N, tempo_de_simulacao = 30, temperatura = 0, linh
 def graph_results(resultados):
     # plotar os resultados
     plot = plt.plot(resultados)
-    plt.savefig("resultados.png")
 
+    # adicionar título ao gráfico
+    plt.title("Crescimento populacional")
+    # adicionar rótulos aos eixos
+    plt.xlabel("Tempo (dias)")
+    plt.ylabel("População")
+    # salvar o gráfico
+    plt.savefig("resultados.png")
 
 def main(): # função principal
     arquivo = input("Arquivo de dados: ") # pegar o nome do arquivo de dados
