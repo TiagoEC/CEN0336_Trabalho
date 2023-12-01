@@ -8,11 +8,22 @@
 """
 
 import sys
-import matplotlib.pyplot as plt
-import math
 import random
+import matplotlib.pyplot as plt
 
-def simular_crescimento(dados, N, tempo_de_simulacao = 30, temperatura = 0, linhagem = ""):
+def simular_crescimento(dados, N, tempo_de_simulacao: int = 30, temperatura: int = 0, linhagem: str = "") -> list:
+    try:
+        if tempo_de_simulacao <= 0:
+            raise ValueError("Este método precisa que o tempo seja maior que zero")
+        if not N > 0:
+            raise ValueError("Este método precisa que a população inicial seja maior que zero")
+        if not linhagem in dados.keys():
+            raise ValueError("Este método precisa que a linhagem seja uma das fornecidas nos dados")
+        if not temperatura in dados[linhagem].keys():
+            raise ValueError("Este método precisa que a temperatura inicial seja uma das fornecidas nos dados")
+    except(ValueError):
+        sys.exit()
+    
     # pegar o valor de r da tabela e a população inicial, iniciar variáveis (armazenar em variáveis os resultados que queremos)
     resultados = [] # criar lista dos resultados
     rs = [] # criar lista dos valores de r
@@ -41,10 +52,11 @@ def simular_crescimento(dados, N, tempo_de_simulacao = 30, temperatura = 0, linh
         else: # se a temperatura estiver dentro do intervalo
             temperatura = new_temp
         
+        # novo r = r_menor + (r2 - r1) * (t - t1) / (t2 - t1)
         if temperatura < temps[1]: # se a temperatura for menor que a do meio
-            new_r = (temps[1] - temperatura) * ((float(dados[linhagem][str(temps[1])]) - float(dados[linhagem][str(temps[0])])) / (temps[1] - temps[0]) + float(dados[linhagem][str(temps[0])]))
+            new_r = float(dados[linhagem][str(temps[0])]) + (float(dados[linhagem][str(temps[1])]) - float(dados[linhagem][str(temps[0])])) * (temperatura - temps[0]) / (temps[1] - temps[0])
         elif temperatura > temps[1]: # se a temperatura for maior que a do meio
-            new_r = (temperatura - temps[1]) * ((float(dados[linhagem][str(temps[2])]) - float(dados[linhagem][str(temps[1])])) / (temps[2] - temps[1]) + float(dados[linhagem][str(temps[1])]))
+            new_r = float(dados[linhagem][str(temps[1])]) + (float(dados[linhagem][str(temps[2])]) - float(dados[linhagem][str(temps[1])])) * (temperatura - temps[1]) / (temps[2] - temps[1])
         else:
             new_r = float(dados[linhagem][str(temps[1])])
         
@@ -55,26 +67,26 @@ def simular_crescimento(dados, N, tempo_de_simulacao = 30, temperatura = 0, linh
         resultados.append(pop) # adicionar o novo número populacional aos resultados
         rs.append(r) # adicionar o novo valor de r aos resultados
         ts.append(temperatura) # adicionar a nova temperatura aos resultados
-     
-    with open("out.txt", "w") as file: # salvando os resultados em um arquivo txt
-        file.write("Tempo\tPopulação\tR\tTemps\n")
-        for t in range(len(resultados)):
-            file.write(str(t) + "\t" + str(resultados[t]) + "\t" + str(rs[t]) + "\t" + str(ts[t]) + "\n")
-    return resultados # retornar os resultados
 
-def graph_results(resultados):
+    return resultados, rs, ts # retornar os resultados
+
+def graph_results(dados, title, yLabel, name = "out.png"):
     # plotar os resultados
-    plot = plt.plot(resultados)
+    plot = plt.plot(dados)
 
     # adicionar título ao gráfico
-    plt.title("Crescimento populacional")
+    plt.title(title)
     # adicionar rótulos aos eixos
     plt.xlabel("Tempo (dias)")
-    plt.ylabel("População")
+    plt.ylabel(yLabel)
     # salvar o gráfico
-    plt.savefig("resultados.png")
+    plt.savefig(name)
+    # fechar o gráfico
+    plt.close()
 
 def main(): # função principal
+
+
     arquivo = input("Arquivo de dados: ") # pegar o nome do arquivo de dados
     
     linhagens = {} # criar um dicionário vazio para armazenar os dados da tabela
@@ -112,7 +124,7 @@ def main(): # função principal
                     print("Todas as linhas devem ter o mesmo número de itens")
                     sys.exit()
 
-    except:
+    except(IOError):
         print("O arquivo não existe ou não pode ser lido")
         sys.exit()
     
@@ -150,12 +162,21 @@ def main(): # função principal
     except(ValueError):
         sys.exit()
 
-
     # chamar a função simulate_growth
-    resultados = simular_crescimento(linhagens, N_inicial, tempo, temperatura, linhagem = linhagem)
+    resultados, resultado_r, resultado_t = simular_crescimento(linhagens, N_inicial, tempo, temperatura, linhagem = linhagem)
     
-    # chamar a função graph_results
-    graph_results(resultados)
+    # chamar a função graph_results para plotar os resultados
+    graph_results(resultados, "Crescimento populacional da linhagem " + linhagem + " a " + temperatura + "°C", "População", name = "resultados.png")
+    graph_results(resultado_r, "Variação de r da linhagem por dia", "r", name = "out_r.png")
+    graph_results(resultado_t, "Variação de temperatura da linhagem por dia", "Temperatura", name = "out_t.png")
+
+    # salvar os resultados em um arquivo
+     
+    with open("out.txt", "w") as file: # salvando os resultados em um arquivo txt
+        file.write("Tempo\tPopulação\tR\tTemps\n")
+        for t in range(len(resultados)):
+            file.write(str(t) + "\t" + str(resultados[t]) + "\t" + str(resultado_r[t]) + "\t" + str(resultado_t[t]) + "\n")
+
 
 if __name__ == "__main__": # se o programa for executado diretamente
     main() # chamar a função main
