@@ -250,7 +250,7 @@ OU apenas python simulation.py. Nesse caso, os dados serão solicitados pelo ter
     # chamar a função graph_results para plotar os resultados
     graph_results(resultados, "Crescimento populacional da linhagem " + linhagem + " a temperatura inicial " + temperatura + "°C", "População", name = "resultados.png")
     graph_results(resultado_r, "Variação de r da linhagem por dia", "r", name = "out_r.png")
-    graph_results(resultado_t, "Variação de temperatura da linhagem por dia", "Temperatura (°C)", name = "out_t.png")
+    graph_results(resultado_t, "Variação de temperatura por dia", "Temperatura (°C)", name = "out_t.png")
 
     # salvar os resultados em um arquivo
      
