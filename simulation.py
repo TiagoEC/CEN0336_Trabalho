@@ -12,7 +12,7 @@ import random
 import argparse
 import matplotlib.pyplot as plt
 
-def simular_crescimento(dados, N, tempo_de_simulacao: int = 30, temperatura: int = 0, linhagem: str = "") -> list:
+def simular_crescimento(dados, N, tempo_de_simulacao: int = 30, temperatura: int = 0, linhagem: str = "", var_temp: list[int] = [-1, 1]) -> list:
     try:
         if tempo_de_simulacao <= 0:
             raise ValueError("Este método precisa que o tempo seja maior que zero")
@@ -22,6 +22,8 @@ def simular_crescimento(dados, N, tempo_de_simulacao: int = 30, temperatura: int
             raise ValueError("Este método precisa que a linhagem seja uma das fornecidas nos dados")
         if not temperatura in dados[linhagem].keys():
             raise ValueError("Este método precisa que a temperatura inicial seja uma das fornecidas nos dados")
+        if len(var_temp) != 2:
+            raise ValueError("Este método precisa que a variação de temperatura seja uma lista com dois valores")
     except(ValueError):
         sys.exit()
     
@@ -45,7 +47,7 @@ def simular_crescimento(dados, N, tempo_de_simulacao: int = 30, temperatura: int
         # o r será considerado como linear entre os valores de temperatura, logo, o valor de r será calculado por interpolação linear
         # a temperatura será truncada para os valores de temperatura fornecidos nos dados
 
-        new_temp = temperatura + random.uniform(-1,1) # gerar um novo valor de temperatura
+        new_temp = temperatura + random.uniform(var_temp[0],var_temp[1]) # gerar um novo valor de temperatura
         if new_temp > temps[-1]: # se a temperatura for maior que a máxima
             temperatura = temps[-1]
         elif new_temp < temps[0]: # se a temperatura for menor que a mínima
@@ -88,13 +90,17 @@ def graph_results(dados, title, yLabel, name = "out.png"):
 def main(): # função principal
 
     # inputs pelo argparse
-    ajuda = """Uso: python simulation.py -i <arquivo> -t <tempo> -n <população inicial> -l <linhagem> -T <temperatura>\nOU apenas python simulation.py\n\n
-    Arquivo de dados deve conter: Primeira linha com as temperaturas, as próximas linhas com a primeira coluna sendo a linhagem e as próximas colunas sendo os valores de r para cada temperatura
-    Tempo de simulação deve ser um inteiro maior que zero
-    População inicial deve ser um inteiro maior que zero e menor que 1 milhão
-    Linhagem deve ser uma das fornecidas nos dados
-    Temperatura deve ser uma das fornecidas nos dados"""
-    parser = argparse.ArgumentParser(description=ajuda)
+    ajuda = """Intruções de uso: \npython simulation.py -i <arquivo> -t <tempo> -n <população inicial> -l <linhagem> -T <temperatura> --var_inf <limite inferior de variação da temperatura> --var_sup <limite superior de variação da temperatura>
+OU apenas python simulation.py. Nesse caso, os dados serão solicitados pelo terminal.
+   Arquivo de dados deve conter: Primeira linha com as temperaturas, as próximas linhas com a primeira coluna sendo a linhagem e as próximas colunas sendo os valores de r para cada temperatura
+   Tempo de simulação deve ser um inteiro maior que zero
+   População inicial deve ser um inteiro maior que zero e menor que 1 milhão
+   Linhagem deve ser uma das fornecidas nos dados
+   Temperatura deve ser uma das fornecidas nos dados
+   Opcional: variação da temperatura deve ser uma lista com dois valores, o primeiro sendo o limite inferior e o segundo sendo o limite superior de variação da temperatura"""
+    parser = argparse.ArgumentParser(description=ajuda, formatter_class=argparse.RawTextHelpFormatter)
+    # formatter_class=argparse.RawTextHelpFormatter -> para que a ajuda seja exibida corretamente (com quebra de linhas)
+
     # --arquivo ou -i: arquivo de dados
     parser.add_argument('--arquivo', '-i', type=str, help='Arquivo de dados')
     # --tempo ou -t: tempo de simulação
@@ -105,6 +111,10 @@ def main(): # função principal
     parser.add_argument('--linhagem', '-l', type=str, help='Linhagem, entre as fornecidas nos dados')
     # --temperatura ou -T: temperatura
     parser.add_argument('--temperatura', '-T', type=str, help='Temperatura, entre as fornecidas nos dados')
+    # --var_inf: limite inferior de variação da temperatura
+    parser.add_argument('--var_inf', '-v_i', type=int, help='Opc: Limite inferior de variação da temperatura (padrão: -1)')
+    # --var_sup: limite superior de variação da temperatura
+    parser.add_argument('--var_sup', '-v_s', type=int, help='Opc: Limite superior de variação da temperatura (padrão: 1)')
     args = parser.parse_args()
 
     # os dados podem ser fornecidos pelo terminal ou pelo argparse
@@ -116,7 +126,7 @@ def main(): # função principal
     linhagens = {} # criar um dicionário vazio para armazenar os dados da tabela
     
     # ler o arquivo de dados e armazenar os dados no dicionário
-    try:    # o arquivo deve existir
+    try: # o arquivo deve existir
         with open(arquivo, "r") as file: # abrir o arquivo de dados            
             try: # a primeira linha informa temperatura
                 temperaturas = file.readline().split() # pegar a linha com as temperaturas
@@ -152,7 +162,7 @@ def main(): # função principal
         print("O arquivo não existe ou não pode ser lido")
         sys.exit()
 
-    if not args.tempo:
+    if not args.tempo: # pegar o tempo de simulação no terminal, caso não tenha sido fornecido pelo argparse
         try: # verificar se os dados são válidos
             tempo = int(input("Duração da simulação: ")) # pegar a duração da simulação no terminal
         except ValueError:
@@ -160,7 +170,8 @@ def main(): # função principal
             sys.exit()
     else:
         tempo = args.tempo
-    if not args.pop:
+
+    if not args.pop: # pegar a população inicial no terminal, caso não tenha sido fornecida pelo argparse
         try: # verificar se os dados são válidos
             N_inicial = int(input("População inicial: ")) # pegar a população inicial no terminal
         except ValueError:
@@ -168,14 +179,42 @@ def main(): # função principal
             sys.exit()
     else:
         N_inicial = args.pop
-    if not args.linhagem:
+
+    if not args.linhagem: # pegar a linhagem no terminal, caso não tenha sido fornecida pelo argparse
         linhagem = input("Linhagem (Opções " + ", ".join(linhagens.keys()) + "): ") # pegar a linhagem no terminal
     else:
         linhagem = args.linhagem
-    if not args.temperatura:
+
+    if not args.temperatura: # pegar a temperatura no terminal, caso não tenha sido fornecida pelo argparse
         temperatura = input("Temperatura (Opções " + ", ".join(temperaturas) + "): ") # pegar a temperatura no terminal
     else:
         temperatura = args.temperatura
+    
+    # pegar a variação da temperatura no terminal, caso não tenha sido fornecida pelo argparse
+    if not args.var_inf:
+        var_temps = input("Opcional: variação da temperatura, separadas por vírgula (Vazio = -1, 1): ") # pegar a variação da temperatura no terminal
+        if not var_temps: # se não foi fornecida uma variação da temperatura, usar os valores padrão
+            var_inf = -1
+            var_sup = 1
+        else:
+            var_temps = var_temps.strip(" ").split(",")
+
+            if not isinstance(var_temps, list) or len(var_temps) != 2:
+                # caso sejam fornecidos valores inválidos, usar os valores padrão e avisar
+                print("A variação da temperatura deve ser uma lista com dois valores. Ex: -1, 1. Usando os valores padrão")
+                var_inf = -1
+                var_sup = 1
+            else:
+                var_inf = var_temps[0]
+                var_sup = var_temps[1]
+                # se algum dos valores não for fornecido, usar os valores padrão
+                if var_inf == "":
+                    var_inf = -1
+                if var_sup == "":
+                    var_sup = 1
+    else: # se a variação da temperatura foi fornecida pelo argparse
+        var_inf = args.var_inf
+        var_sup = args.var_sup
     
     # Testes de validação dos dados
     try:
@@ -197,12 +236,15 @@ def main(): # função principal
         if tempo >= 200: # o tempo deve ter limite de 200 dias
             print("O tempo deve ser menor que 200 dias")
             raise ValueError
-        
-    except(ValueError):
-        sys.exit()
+        var_inf = int(var_inf) # a variação da temperatura deve ser inteira
+        var_sup = int(var_sup) # a variação da temperatura deve ser inteira
 
+    except ValueError as e:
+        print(e)
+        sys.exit()
+        
     # chamar a função simulate_growth
-    resultados, resultado_r, resultado_t = simular_crescimento(linhagens, N_inicial, tempo, temperatura, linhagem = linhagem)
+    resultados, resultado_r, resultado_t = simular_crescimento(linhagens, N_inicial, tempo, temperatura, linhagem = linhagem, var_temp = [var_inf, var_sup])
     
     # chamar a função graph_results para plotar os resultados
     graph_results(resultados, "Crescimento populacional da linhagem " + linhagem + " a " + temperatura + "°C", "População", name = "resultados.png")
