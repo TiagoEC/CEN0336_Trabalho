@@ -10,9 +10,10 @@
 import sys
 import random
 import argparse
+from typing import List
 import matplotlib.pyplot as plt
 
-def simular_crescimento(dados, N, tempo_de_simulacao: int = 30, temperatura: int = 0, linhagem: str = "", var_temp: list[int] = [-1, 1]) -> list:
+def simular_crescimento(dados, N, tempo_de_simulacao: int = 30, temperatura: int = 0, linhagem: str = "", var_temp: List[int] = [-1, 1]) -> list:
     try:
         if tempo_de_simulacao <= 0:
             raise ValueError("Este método precisa que o tempo seja maior que zero")
@@ -242,14 +243,14 @@ OU apenas python simulation.py. Nesse caso, os dados serão solicitados pelo ter
     except ValueError as e:
         print(e)
         sys.exit()
-        
+
     # chamar a função simulate_growth
     resultados, resultado_r, resultado_t = simular_crescimento(linhagens, N_inicial, tempo, temperatura, linhagem = linhagem, var_temp = [var_inf, var_sup])
     
     # chamar a função graph_results para plotar os resultados
-    graph_results(resultados, "Crescimento populacional da linhagem " + linhagem + " a " + temperatura + "°C", "População", name = "resultados.png")
+    graph_results(resultados, "Crescimento populacional da linhagem " + linhagem + " a temperatura inicial " + temperatura + "°C", "População", name = "resultados.png")
     graph_results(resultado_r, "Variação de r da linhagem por dia", "r", name = "out_r.png")
-    graph_results(resultado_t, "Variação de temperatura da linhagem por dia", "Temperatura", name = "out_t.png")
+    graph_results(resultado_t, "Variação de temperatura da linhagem por dia", "Temperatura (°C)", name = "out_t.png")
 
     # salvar os resultados em um arquivo
      
