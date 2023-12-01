@@ -9,6 +9,7 @@
 
 import sys
 import random
+import argparse
 import matplotlib.pyplot as plt
 
 def simular_crescimento(dados, N, tempo_de_simulacao: int = 30, temperatura: int = 0, linhagem: str = "") -> list:
@@ -86,11 +87,35 @@ def graph_results(dados, title, yLabel, name = "out.png"):
 
 def main(): # função principal
 
+    # inputs pelo argparse
+    ajuda = """Uso: python simulation.py -i <arquivo> -t <tempo> -n <população inicial> -l <linhagem> -T <temperatura>\nOU apenas python simulation.py\n\n
+    Arquivo de dados deve conter: Primeira linha com as temperaturas, as próximas linhas com a primeira coluna sendo a linhagem e as próximas colunas sendo os valores de r para cada temperatura
+    Tempo de simulação deve ser um inteiro maior que zero
+    População inicial deve ser um inteiro maior que zero e menor que 1 milhão
+    Linhagem deve ser uma das fornecidas nos dados
+    Temperatura deve ser uma das fornecidas nos dados"""
+    parser = argparse.ArgumentParser(description=ajuda)
+    # --arquivo ou -i: arquivo de dados
+    parser.add_argument('--arquivo', '-i', type=str, help='Arquivo de dados')
+    # --tempo ou -t: tempo de simulação
+    parser.add_argument('--tempo', '-t', type=int, help='Duração da simulação (em dias) [1, 200]]')
+    # --pop ou -n: população inicial
+    parser.add_argument('--pop', '-n', type=int, help='População inicial [1, 1000000]]')
+    # --linhagem ou -l: linhagem
+    parser.add_argument('--linhagem', '-l', type=str, help='Linhagem, entre as fornecidas nos dados')
+    # --temperatura ou -T: temperatura
+    parser.add_argument('--temperatura', '-T', type=str, help='Temperatura, entre as fornecidas nos dados')
+    args = parser.parse_args()
 
-    arquivo = input("Arquivo de dados: ") # pegar o nome do arquivo de dados
+    # os dados podem ser fornecidos pelo terminal ou pelo argparse
+    if not args.arquivo:
+        arquivo = input("Arquivo de dados: ") # pegar o nome do arquivo de dados
+    else:
+        arquivo = args.arquivo
     
     linhagens = {} # criar um dicionário vazio para armazenar os dados da tabela
     
+    # ler o arquivo de dados e armazenar os dados no dicionário
     try:    # o arquivo deve existir
         with open(arquivo, "r") as file: # abrir o arquivo de dados            
             try: # a primeira linha informa temperatura
@@ -123,39 +148,53 @@ def main(): # função principal
                 except(ValueError):
                     print("Todas as linhas devem ter o mesmo número de itens")
                     sys.exit()
-
-    except(IOError):
+    except FileNotFoundError:
         print("O arquivo não existe ou não pode ser lido")
         sys.exit()
-    
-    try: # verificar se os dados são válidos
-        tempo = int(input("Duração da simulação: ")) # pegar a duração da simulação no terminal
-        
-        N_inicial = int(input("População inicial: ")) # pegar a população inicial no terminal
-    except(ValueError):
-        print("O tempo e o N inicial devem ser inteiros")
-        sys.exit()
-    linhagem = input("Linhagem (Opções " + ", ".join(linhagens.keys()) + "): ") # pegar a linhagem no terminal
 
-    temperatura = input("Temperatura (Opções " + ", ".join(temperaturas) + "): ") # pegar a temperatura no terminal
+    if not args.tempo:
+        try: # verificar se os dados são válidos
+            tempo = int(input("Duração da simulação: ")) # pegar a duração da simulação no terminal
+        except ValueError:
+            print("O tempo e o N inicial devem ser inteiros")
+            sys.exit()
+    else:
+        tempo = args.tempo
+    if not args.pop:
+        try: # verificar se os dados são válidos
+            N_inicial = int(input("População inicial: ")) # pegar a população inicial no terminal
+        except ValueError:
+            print("O tempo e o N inicial devem ser inteiros")
+            sys.exit()
+    else:
+        N_inicial = args.pop
+    if not args.linhagem:
+        linhagem = input("Linhagem (Opções " + ", ".join(linhagens.keys()) + "): ") # pegar a linhagem no terminal
+    else:
+        linhagem = args.linhagem
+    if not args.temperatura:
+        temperatura = input("Temperatura (Opções " + ", ".join(temperaturas) + "): ") # pegar a temperatura no terminal
+    else:
+        temperatura = args.temperatura
     
+    # Testes de validação dos dados
     try:
-        if not linhagem in linhagens.keys(): # a linhagem deve ser uma das fornecidas nos dados
+        if not linhagem in linhagens: # a linhagem deve ser uma das fornecidas nos dados
             print("A linhagem deve ser uma das fornecidas nos dados")
             raise ValueError
         if not temperatura in temperaturas: # a temperatura deve ser uma das fornecidas nos dados
             print("A temperatura deve ser uma das fornecidas nos dados")
             raise ValueError
-        if not N_inicial > 0: # o N inicial deve ser inteiro e maior que zero
+        if N_inicial <= 0: # o N inicial deve ser inteiro e maior que zero
             print("O N inicial deve ser maior que zero")
             raise ValueError
-        if not N_inicial < 1000000: # o N inicial deve ter limite de 1 milhão
+        if N_inicial > 1000000: # o N inicial não pode ser maior que 1 milhão
             print("O N inicial deve ser menor que 1 milhão")
             raise ValueError
-        if not tempo > 0: # o tempo deve ser inteiro e maior que zero
+        if tempo <= 0: # o tempo deve ser inteiro e maior que zero
             print("O tempo deve ser maior que zero")
             raise ValueError
-        if not tempo < 200: # o tempo deve ter limite de 200 dias
+        if tempo >= 200: # o tempo deve ter limite de 200 dias
             print("O tempo deve ser menor que 200 dias")
             raise ValueError
         
