@@ -14,7 +14,7 @@ from typing import List
 import matplotlib.pyplot as plt
 
 def simular_crescimento(dados, N, tempo_de_simulacao: int = 30, temperatura: int = 0, linhagem: str = "", var_temp: List[int] = [-1, 1]) -> list:
-    try:
+    try: # testar se as entradas são válidas
         if tempo_de_simulacao <= 0:
             raise ValueError("Este método precisa que o tempo seja maior que zero")
         if not N > 0:
@@ -44,7 +44,7 @@ def simular_crescimento(dados, N, tempo_de_simulacao: int = 30, temperatura: int
 
     for t in range(tempo_de_simulacao):        
 
-        # escolhendo uma nova temperatura e calculando o novo valor de r
+        # escolher uma nova temperatura e calculando o novo valor de r
         # o r será considerado como linear entre os valores de temperatura, logo, o valor de r será calculado por interpolação linear
         # a temperatura será truncada para os valores de temperatura fornecidos nos dados
 
